@@ -4,7 +4,11 @@ import sys
 from collections import Counter 
 
 #input = open('small.txt').read().strip()
-input = open('../input_d_9.txt').read().strip()
+
+
+sys.setrecursionlimit(100000)
+
+input = open('9-4096-4.in').read().strip()
 groups=[[0 for c in list(line)] for line in [e for e in input.split('\n')]]
 matrix=[[int(c) for c in list(line)] for line in [e for e in input.split('\n')]]
 
@@ -31,6 +35,7 @@ def visit_all_neighbours(i,j,group):
 current_group=0
 for i in range(0,rows):
     prev=float('inf')
+#    print(i)
     for j in range(0,columns):
         if groups[i][j]!=0 or matrix[i][j]==9:
             continue
