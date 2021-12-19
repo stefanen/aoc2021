@@ -45,5 +45,5 @@ print(y)
 #x=[1,2,3]
 #y=[3,4,2]
 fig = tpl.figure()
-fig.plot(x, y, width=40, height=10, plot_command="plot '-' w points")
+fig.plot(x, y, width=200, height=100, plot_command="plot '-' w points")
 fig.show()
