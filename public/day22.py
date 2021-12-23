@@ -9,15 +9,17 @@ input = open(0).read().strip()
 
 
 lines=[e for e in input.split('\n')]
-lines=lines[:20]
+lines=lines[:10]
 cuboids=[]
+id=0
 for line in lines:
     #on x=-35..17,y=-28..24,z=-43..2
     print(line)
     #m = re.search('(on|off) x=-35..17,y=-28..24,z=-43..2', line)
     m = re.search('(on|off) x=([0-9-]*)\.\.([0-9-]*),y=([0-9-]*)\.\.([0-9-]*),z=([0-9-]*)\.\.([0-9-]*)', line)
-    (status,x_min,x_max,y_min,y_max,z_min,z_max) =  (m.group(1),int(m.group(2)),int(m.group(3)),int(m.group(4)),int(m.group(5)),int(m.group(6)),int(m.group(7)))
-    cuboids.append((status,x_min,x_max,y_min,y_max,z_min,z_max))
+    (status,x_min,x_max,y_min,y_max,z_min,z_max,id) =  (m.group(1),int(m.group(2)),int(m.group(3)),int(m.group(4)),int(m.group(5)),int(m.group(6)),int(m.group(7)),id)
+    cuboids.append((status,x_min,x_max,y_min,y_max,z_min,z_max,id))
+    id+=1
 
 def contains(cube, cuboid):
     if cuboid[1]<=cube[0]<=cuboid[2] and cuboid[3]<=cube[1]<=cuboid[4] and cuboid[5]<=cube[2]<=cuboid[6]:
@@ -28,11 +30,56 @@ def volume(cuboid):
     return (cuboid[2]-cuboid[1]+1)*(cuboid[4]-cuboid[3]+1)*(cuboid[6]-cuboid[5]+1)
 
 
-def volume_all_intersections_of_size(cuboid,other_cuboids,k):
-    res=0
-    for c in itertools.combinations(other_cuboids,k):
-        res+=volume_intersection(list(c)+[cuboid])
-    return res
+
+
+
+
+
+
+
+
+
+
+
+
+
+cache={}
+def find_nonempty_intersections(cuboids,k):
+    global cache
+    if k<2: 
+        return []
+    res=[]
+    for c in itertools.combinations(cuboids,2):
+        if volume_intersection(list(c))>0:
+            res.append(list(c))
+    if k==2:
+        cache[k]=res
+        #print(len(res))
+        return res
+    cache[2]=res
+    loop=k-2
+    for i in range(0,loop):
+        new_res=[]
+        for c in res:
+            #print(c)
+            for cuboid in cuboids:
+                found=False
+                for sub_c in list(c):
+                    if sub_c[7]>=cuboid[7]:
+                        found=True
+                if found:
+                    continue
+                #print(c+[cuboid])
+                if volume_intersection(c+[cuboid])>0:
+                    new_res.append(c+[cuboid])
+        cache[i+3]=new_res
+        res=new_res
+        #print(i)
+        #print(cache)
+    #print(new_res
+    #print(len(new_res))
+    return new_res
+
 
 def volume_intersection(cuboids):
     #print(cuboids)
@@ -50,23 +97,57 @@ def volume_intersection(cuboids):
     return (max_x-min_x+1)*(max_y-min_y+1)*(max_z-min_z+1)
 
 
+def find_nonempty_intersections3(cuboids,k):
+    global cache
+    res=[]
+    #print(cache.keys())
+    for c in cache[k]:
+        ok=True
+        for i in list(c):
+            if i not in cuboids:
+                ok=False
+        if ok:
+            res.append(list(c))
+    #print(len(res))
+    return res
+
+#find_nonempty_intersections(cuboids[0:],2)
+#find_nonempty_intersections(cuboids[0:],3)
+#find_nonempty_intersections(cuboids[0:],4)
+#find_nonempty_intersections(cuboids[0:],5)
+#find_nonempty_intersections(cuboids[0:],6)
+#find_nonempty_intersections(cuboids[0:],7)
+#find_nonempty_intersections(cuboids[0:],8)
+#find_nonempty_intersections(cuboids[0:],9)
+find_nonempty_intersections(cuboids[0:],len(cuboids))
+
+print("The contents of the computed cache which k-subsets of all-cuboids that have non-empty intersection: (k is key)")
+print(Counter(cache))
+
+sys.exit()
+
+def volume_all_intersections_of_size(cuboid,other_cuboids,k):
+    res=0
+    #print("v")
+    for c in find_nonempty_intersections3([cuboid] +other_cuboids,k+1):
+        if cuboid in c:
+    #        print(c,k)
+    #for c in itertools.combinations(other_cuboids,k):
+     #   print(c,k)
+            res+=volume_intersection(list(c)+[cuboid])
+    return res
+
+
 def uniq_count(cuboid,remaining_cuboids):
     if len(remaining_cuboids)==0:
         return volume(cuboid)
 
     res=volume(cuboid)
     for i in range(0,len(remaining_cuboids)):
-        print(1000+i)
+        #print(1000+i)
         res=res+((-1) if i%2==0 else 1)*volume_all_intersections_of_size(cuboid,remaining_cuboids,i+1)
         #print(res)
     return res
-
-
-#print(cuboids[1:3])
-#print(volume_intersection(cuboids))
-#print(uniq_count(cuboids[3],[]))
-#print(uniq_count(cuboids[1],cuboids[2:]))
-#print(uniq_count(cuboids[0],cuboids[1:]))
 
 sum=0
 for i in range(0,len(cuboids)):
@@ -76,7 +157,7 @@ for i in range(0,len(cuboids)):
         sum+=uniq_count(cuboids[i],cuboids[i+1:])
     
 print(sum)
-#
+
 sys.exit()
 
 all_x_endpoints=set()
